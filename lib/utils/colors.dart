@@ -8,3 +8,4 @@ Color buttons = const Color.fromRGBO(232, 231, 231, 1.0);
 Color footer = const Color.fromRGBO(250, 217, 217, 1.0);
 Color otp = const Color.fromRGBO(228, 223, 223, 1);
 Color border = const Color.fromRGBO(255, 156, 148, 1.0);
+Color dummy = const Color.fromRGBO(255, 156, 148, 1.0);

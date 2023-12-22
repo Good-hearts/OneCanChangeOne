@@ -1,45 +1,35 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import 'feed_model.dart';
+import 'package:flutter/foundation.dart';
 
 class FeedProvider extends ChangeNotifier {
-  List<PostCache> _postCaches = [];
-  List<PostCache> get postCaches => List.from(_postCaches.reversed);
+  List<Feed> _feeds = [];
+  List<Feed> _drafts = [];
 
-  Future<void> loadPostCachesFromDatabase() async {
-    _postCaches = await DatabaseHelper.instance.getAllPostCaches();
+  List<Feed> get feeds => List.from(_feeds.reversed);
+
+  Future<void> loadFeedsFromDatabase() async {
+    _feeds = await DatabaseHelper.instance.getAllFeeds();
     notifyListeners();
   }
 
-  Future<void> addPostCacheToDatabase(PostCache postCache) async {
-    await DatabaseHelper.instance.insertPostCache(postCache);
-    await loadPostCachesFromDatabase();
+  Future<void> addFeedToDatabase(Feed feed) async {
+    await DatabaseHelper.instance.insertFeed(feed);
+    await loadFeedsFromDatabase();
+    // Reload the feeds after adding a new one
   }
 
-  Future<void> loadCommentsForPost(int postId) async {
-    List<Comment> comments = await DatabaseHelper.instance.getCommentsForPost(postId);
-    // Find the corresponding post in _postCaches and update its comments
-    int postIndex = _postCaches.indexWhere((post) => post.postId == postId);
-    if (postIndex != -1) {
-      _postCaches[postIndex].comments = comments;
-      notifyListeners();
-    }
-  }
-
-  Future<void> addCommentToPost(Comment comment) async {
-    await DatabaseHelper.instance.insertComment(comment);
-    // Update the corresponding post with the new comment
-    int postIndex = _postCaches.indexWhere((post) => post.postId == comment.postId);
-    if (postIndex != -1) {
-      _postCaches[postIndex].comments.add(comment);
-      notifyListeners();
-    }
-  }
-
-
-  Future<void> deletePostCache(PostCache postCache) async {
-    await DatabaseHelper.instance.deletePostCache(postCache);
-    _postCaches.remove(postCache);
+  Future<void> deleteFeed(Feed feed) async {
+    await DatabaseHelper.instance.deleteFeed(feed);
+    _feeds.remove(feed);
     notifyListeners();
   }
+
+  void addDraft(Feed draft) {
+    _drafts.add(draft);
+    notifyListeners();
+  }
+
+  List<Feed> get drafts => _drafts;
 }
