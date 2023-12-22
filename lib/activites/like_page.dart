@@ -19,8 +19,7 @@ class LikePage extends StatefulWidget {
 
 class _LikePageState extends State<LikePage> {
   var _currentIndex = 0;
-  List<Feed> feeds = [];
-
+  List<PostCache> postCaches = [];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,18 +166,18 @@ class _LikePageState extends State<LikePage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: CustomFloatingButton(
         onPressed: () async {
-          Feed? newFeed = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddFeedPage()),
-          );
+      PostCache? newPostCache = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddFeedPage()),
+      );
 
-          if (newFeed != null) {
-            Provider.of<FeedModel>(context, listen: false).addFeed(newFeed);
-            setState(() {
-              _currentIndex = 0;
-            });
-          }
-        },
+      if (newPostCache != null) {
+      Provider.of<FeedModel>(context, listen: false).addPostCache(newPostCache);
+      setState(() {
+      _currentIndex = 0;
+      });
+      }
+      },
         svgIconPath: 'assets/cplus.svg',
         buttonColor: Colors.red,
       ),

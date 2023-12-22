@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goodhearts/feed/feed_model.dart';
 import 'package:goodhearts/activites/share_page.dart';
 import 'package:goodhearts/feed/feed_page.dart';
 import 'package:goodhearts/utils/colors.dart';
@@ -8,10 +9,9 @@ import 'package:goodhearts/utils/customHeader.dart';
 import 'like_page.dart';
 import '../utils/customFloatingButton.dart';
 import '../utils/customFooter.dart';
-import 'package:goodhearts/feed/feed_model.dart';
 
 class CommentPage extends StatefulWidget {
-  const CommentPage({super.key});
+  const CommentPage({Key? key}) : super(key: key);
 
   @override
   State<CommentPage> createState() => _CommentPageState();
@@ -19,7 +19,7 @@ class CommentPage extends StatefulWidget {
 
 class _CommentPageState extends State<CommentPage> {
   var _currentIndex = 0;
-  List<Feed> feeds = [];
+  List<PostCache> postCaches = [];
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +46,8 @@ class _CommentPageState extends State<CommentPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(0, 40), backgroundColor: buttons,
+                    minimumSize: const Size(0, 40),
+                    backgroundColor: buttons,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
@@ -68,7 +69,8 @@ class _CommentPageState extends State<CommentPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(0, 40), backgroundColor: buttons,
+                    minimumSize: const Size(0, 40),
+                    backgroundColor: buttons,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
@@ -107,7 +109,8 @@ class _CommentPageState extends State<CommentPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(0, 40), backgroundColor: buttons,
+                    minimumSize: const Size(0, 40),
+                    backgroundColor: buttons,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
@@ -141,7 +144,8 @@ class _CommentPageState extends State<CommentPage> {
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(34.09),
-                    ), backgroundColor: Colors.red,
+                    ),
+                    backgroundColor: Colors.red,
                   ),
                   child: const Text(
                     'Insights',
@@ -167,13 +171,13 @@ class _CommentPageState extends State<CommentPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: CustomFloatingButton(
         onPressed: () async {
-          Feed? newFeed = await Navigator.push(
+          PostCache? newPostCache = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddFeedPage()),
           );
 
-          if (newFeed != null) {
-            Provider.of<FeedModel>(context, listen: false).addFeed(newFeed);
+          if (newPostCache != null) {
+            Provider.of<FeedModel>(context, listen: false).addPostCache(newPostCache);
             setState(() {
               _currentIndex = 0;
             });
