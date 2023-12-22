@@ -4,6 +4,7 @@ import 'package:goodhearts/authentication/login_page.dart';
 import 'package:goodhearts/feed/myfeed_page.dart';
 import 'package:goodhearts/profile/notification_page.dart';
 import 'package:goodhearts/profile/recommendation_page.dart';
+import 'package:goodhearts/settings/settings_page.dart';
 import 'package:goodhearts/utils/colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goodhearts/profile/user_profile_page.dart';
@@ -208,6 +209,26 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const notification()),
+                );
+              },
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                size: 13,
+                color: Colors.black,
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: Icon(
+                Icons.settings,
+                size: 25,
+                color: Colors.black,
+              ),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
                 );
               },
               trailing: const Icon(

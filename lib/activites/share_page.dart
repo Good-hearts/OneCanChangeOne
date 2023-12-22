@@ -19,7 +19,7 @@ class SharePage extends StatefulWidget {
 
 class _SharePageState extends State<SharePage> {
   var _currentIndex = 0;
-  List<PostCache> postCaches = [];
+  List<Feed> feeds = [];
 
   @override
   Widget build(BuildContext context) {
@@ -165,13 +165,13 @@ class _SharePageState extends State<SharePage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: CustomFloatingButton(
         onPressed: () async {
-          PostCache? newPostCache = await Navigator.push(
+          Feed? newFeed = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddFeedPage()),
           );
 
-          if (newPostCache != null) {
-            Provider.of<FeedModel>(context, listen: false).addPostCache(newPostCache);
+          if (newFeed != null) {
+            Provider.of<FeedModel>(context, listen: false).addFeed(newFeed);
             setState(() {
               _currentIndex = 0;
             });

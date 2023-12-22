@@ -2,135 +2,67 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:goodhearts/database/database_helper.dart';
 
-class User {
+class Feed {
+  String text;
+  File? imageFile;
+  File? videoFile;
+  double? imageHeight;
+  double? imageWidth;
+  bool isLiked;
   int? id;
-  String username;
-  String? profilePicturePath;
-  String? settings;
+  bool isDraft;
 
-  User({
+  Feed({
+    required this.text,
+    this.imageFile,
+    this.videoFile,
+    this.imageHeight,
+    this.imageWidth,
+    this.isLiked = false,
     this.id,
-    required this.username,
-    this.profilePicturePath,
-    this.settings,
+    this.isDraft = false,
   });
   Map<String, dynamic> toMap() {
     return {
-      'username': username,
-      'profilePicturePath': profilePicturePath,
-      'settings': settings,
+      'text': text,
+      'imageFilePath': imageFile?.path,
+      'videoFilePath': videoFile?.path,
+      'imageHeight': imageHeight,
+      'imageWidth': imageWidth,
+      'isLiked': isLiked ? 1 : 0,
     };
   }
 
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
+  factory Feed.fromMap(Map<String, dynamic> map) {
+    return Feed(
+      text: map['text'],
+      imageFile:
+          map['imageFilePath'] != null ? File(map['imageFilePath']) : null,
+      videoFile:
+          map['videoFilePath'] != null ? File(map['videoFilePath']) : null,
+      imageHeight: map['imageHeight'],
+      imageWidth: map['imageWidth'],
+      isLiked: map['isLiked'] == 1,
       id: map['id'],
-      username: map['username'],
-      profilePicturePath: map['profilePicturePath'],
-      settings: map['settings'],
-    );
-  }
-}
-
-class PostCache {
-  int? id;
-  int postId;
-  String textContent;
-  String? mediaPath;
-  String time;
-  int likeCount;
-  int commentCount;
-  List<Comment> comments;
-
-  PostCache({
-    this.id,
-    required this.postId,
-    required this.textContent,
-    this.mediaPath,
-    required this.time,
-    this.likeCount = 0,
-    this.commentCount = 0,
-    this.comments = const [],
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'postId': postId,
-      'textContent': textContent,
-      'mediaPath': mediaPath,
-      'time': time,
-      'likeCount': likeCount,
-      'commentCount': commentCount,
-      'comments': comments.map((comment) => comment.toMap()).toList(),
-
-    };
-  }
-
-  factory PostCache.fromMap(Map<String, dynamic> map) {
-    return PostCache(
-      id: map['id'],
-      postId: map['postId'],
-      textContent: map['textContent'],
-      mediaPath: map['mediaPath'],
-      time: map['time'],
-      likeCount: map['likeCount'],
-      commentCount: map['commentCount'],
-      comments: List<Comment>.from(
-          map['comments']?.map((x) => Comment.fromMap(x)) ?? const []),
-    );
-  }
-}
-
-
-class Comment {
-  int? id;
-  int postId;
-  int userId;
-  String textContent;
-  String time;
-
-  Comment({
-    this.id,
-    required this.postId,
-    required this.userId,
-    required this.textContent,
-    required this.time,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'postId': postId,
-      'userId': userId,
-      'textContent': textContent,
-      'time': time,
-    };
-  }
-  factory Comment.fromMap(Map<String, dynamic> map) {
-    return Comment(
-      id: map['id'],
-      postId: map['postId'],
-      userId: map['userId'],
-      textContent: map['textContent'],
-      time: map['time'],
     );
   }
 }
 
 class FeedModel extends ChangeNotifier {
   final _currentIndex = 0;
-  final List<PostCache> _postCaches = [];
+  final List<Feed> _feeds = [];
 
   int get currentIndex => _currentIndex;
-  List<PostCache> get postCaches => _postCaches;
+  List<Feed> get feeds => _feeds;
 
-  void addPostCache(PostCache newPostCache) {
-    _postCaches.add(newPostCache);
+  void addFeed(Feed newFeed) {
+    _feeds.add(newFeed);
     notifyListeners();
   }
 
-  Future<void> toggleLike(PostCache postCache) async {
-    postCache.likeCount = postCache.likeCount == 1 ? 0 : 1;
-    await DatabaseHelper.instance.updatePostCacheLikeStatus(postCache);
+  Future<void> toggleLike(Feed feed) async {
+    feed.isLiked = !feed.isLiked;
+    await DatabaseHelper.instance.updateLikeStatus(feed);
     notifyListeners();
   }
 }
