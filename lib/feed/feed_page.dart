@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:goodhearts/activites/Comment_page.dart';
 import 'package:goodhearts/activites/like_page.dart';
 import 'package:goodhearts/activites/share_page.dart';
+import 'package:goodhearts/feed/comment_widget.dart';
 import 'package:goodhearts/utils/colors.dart';
 import 'package:provider/provider.dart';
 import '../database/database_helper.dart';
@@ -24,13 +26,13 @@ class _FeedPageState extends State<FeedPage> {
   var _currentIndex = 0;
   bool showFullText = false;
 
-  Future<void> _deleteFeedConfirmation(BuildContext context, Feed feed) async {
+  Future<void> _deleteFeedConfirmation(BuildContext context, PostCache postCache) async {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Remove Post'),
-          content: Text('Are you sure you want to remove this post?'),
+          title: Text('Delete Post'),
+          content: Text('Are you sure you want to delete this post?'),
           actions: <Widget>[
             TextButton(
               child: Text('No'),
@@ -42,7 +44,7 @@ class _FeedPageState extends State<FeedPage> {
               child: Text('Yes'),
               onPressed: () async {
                 Navigator.of(context).pop();
-                await _deleteFeed(feed);
+                await _deleteFeed(postCache);
               },
             ),
           ],
@@ -51,17 +53,17 @@ class _FeedPageState extends State<FeedPage> {
     );
   }
 
-  Future<void> _deleteFeed(Feed feed) async {
+  Future<void> _deleteFeed(PostCache postCache) async {
     // Remove from UI
     setState(() {
-      Provider.of<FeedProvider>(context, listen: false).deleteFeed(feed);
+      Provider.of<FeedProvider>(context, listen: false).deletePostCache(postCache);
     });
 
     // Remove from database
-    await DatabaseHelper.instance.deleteFeed(feed);
+    await DatabaseHelper.instance.deletePostCache(postCache);
   }
 
-  Widget _buildPostWidget(Feed feed) {
+  Widget _buildPostWidget(PostCache postCache) {
     final int maxDisplayWords = 10;
 
     String getLimitedText(String text) {
@@ -76,6 +78,7 @@ class _FeedPageState extends State<FeedPage> {
         return text;
       }
     }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -97,7 +100,7 @@ class _FeedPageState extends State<FeedPage> {
                 icon: Icon(Icons.more_vert, color: Colors.grey),
                 onSelected: (String choice) {
                   if (choice == 'Delete') {
-                    _deleteFeedConfirmation(context, feed);
+                    _deleteFeedConfirmation(context, postCache);
                   }
                 },
                 itemBuilder: (BuildContext context) {
@@ -122,7 +125,7 @@ class _FeedPageState extends State<FeedPage> {
           ),
         ),
         // Post content
-        if (feed.text.isNotEmpty)
+        if (postCache.textContent.isNotEmpty)
           ListTile(
             title: GestureDetector(
               onTap: () {
@@ -130,16 +133,12 @@ class _FeedPageState extends State<FeedPage> {
                   showFullText = !showFullText;
                 });
               },
-              child: Text(getLimitedText(feed.text)),
+              child: Text(getLimitedText(postCache.textContent)),
             ),
           ),
-        if (feed.text.isEmpty)
-          SizedBox(
-            height: 10,
-          ),
-        if (feed.imageFile != null) Image.file(feed.imageFile!),
-        if (feed.videoFile != null)
-          VideoPlayerWidget(videoFile: feed.videoFile!),
+        if (postCache.textContent.isEmpty)
+          SizedBox(height: 10,),
+        if (postCache.mediaPath != null) Image.file(File(postCache.mediaPath!)),
         Row(
           children: [
             Row(
@@ -148,18 +147,20 @@ class _FeedPageState extends State<FeedPage> {
                   onPressed: () async {
                     // Toggle the like status immediately
                     await Provider.of<FeedModel>(context, listen: false)
-                        .toggleLike(feed);
+                        .toggleLike(postCache);
                   },
                   icon: Icon(
-                    feed.isLiked ? Icons.favorite : Icons.favorite_border,
-                    color: feed.isLiked ? Colors.red : null,
+                    postCache.likeCount == 1 ? Icons.favorite : Icons.favorite_border,
+                    color: postCache.likeCount == 1 ? Colors.red : null,
                   ),
                 ),
-                Text(feed.isLiked ? '1' : '0'),
+                Text(postCache.likeCount.toString()),
               ],
             ),
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                _showCommentBottomSheet(context, postCache);
+              },
               icon: Icon(Icons.message_outlined),
             ),
             IconButton(
@@ -181,10 +182,19 @@ class _FeedPageState extends State<FeedPage> {
     );
   }
 
+  void _showCommentBottomSheet(BuildContext context, PostCache postCache) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return CommentBottomSheet(postCache: postCache);
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-    Provider.of<FeedProvider>(context, listen: false).loadFeedsFromDatabase();
+    Provider.of<FeedProvider>(context, listen: false).loadPostCachesFromDatabase();
   }
 
   @override
@@ -337,21 +347,21 @@ class _FeedPageState extends State<FeedPage> {
               ),
             ),
           ),
-          // Display Feeds
+          // Display PostCaches
           SliverList(
             delegate: SliverChildBuilderDelegate(
-              (context, index) {
+                  (context, index) {
                 var feedProvider = Provider.of<FeedProvider>(context);
-                var feeds = feedProvider.feeds;
-                var feed = feeds[index];
+                var postCaches = feedProvider.postCaches;
+                var postCache = postCaches[index];
                 return Column(
                   children: [
-                    _buildPostWidget(feed),
+                    _buildPostWidget(postCache),
                     const Divider(),
                   ],
                 );
               },
-              childCount: Provider.of<FeedProvider>(context).feeds.length,
+              childCount: Provider.of<FeedProvider>(context).postCaches.length,
             ),
           ),
         ],
@@ -367,13 +377,12 @@ class _FeedPageState extends State<FeedPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: CustomFloatingButton(
         onPressed: () async {
-          Feed? newFeed = await Navigator.push(
-            context,
+          PostCache? newPostCache = await Navigator.push( context,
             MaterialPageRoute(builder: (context) => const AddFeedPage()),
           );
 
-          if (newFeed != null) {
-            Provider.of<FeedModel>(context, listen: false).addFeed(newFeed);
+          if (newPostCache != null) {
+            Provider.of<FeedModel>(context, listen: false).addPostCache(newPostCache);
             setState(() {
               _currentIndex = 0;
             });
